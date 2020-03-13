@@ -19,8 +19,8 @@ class LidarController:
     def append_detection(self, seen_polar):
         """ Save (add) the last obstacle detected in the lidar controller. """
         self.seen_polar.append(seen_polar)  # a en radian, r en mm
-        angle = self.seen_polar[0]
-        radius = self.seen_polar[1]
+        angle = seen_polar[0]
+        radius = seen_polar[1]
         self.seen_cartesian.append((radius * cos(angle), radius * sin(angle)))
 
     def reset_detection(self):
