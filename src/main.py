@@ -18,7 +18,7 @@ from src.robot.controller.debug import DebugController
 from src.robot.controller.motion.localization import LocalizationController
 from src.robot.controller.motion.motion import MotionController
 from src.robot.controller.motion.odometry import OdometryController
-from src.robot.controller.sensor.rplidar import LidarController
+from src.robot.controller.sensor.lidar import LidarController
 from src.robot.controller.strategy import StrategyController
 from src.robot.controller.symmetry import SymmetryController
 from src.robot.entity.color import Color

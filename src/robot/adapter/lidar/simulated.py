@@ -8,7 +8,7 @@ from typing import List, Tuple
 from src.robot.adapter.lidar import LIDARAdapter, Callback
 from src.robot.entity.type import Radian, Millimeter
 
-POINTS = tuple((angle * pi / 180, 100) for angle in range(36))
+POINTS = tuple((angle * pi / 180, 200) for angle in range(0, 360, 10))
 
 
 class SimulatedLIDARAdapter(LIDARAdapter):
