@@ -27,8 +27,8 @@ class State:
     Contains the state of the pathfinding controller state
     """
     nodes: List[Node]
-    permanent_obstacles: Tuple[Segment]
-    temporary_obstacles: Tuple[Vector2]
+    permanent_obstacles: Tuple[Vector2, ...]
+    temporary_obstacles: Tuple[Vector2, ...]
 
 
 class DirtyPythfindingController(PathfindingController):
@@ -40,15 +40,14 @@ class DirtyPythfindingController(PathfindingController):
         """
         Initialize state
         """
-        self._state = State(
-            nodes=[],
-            permanent_obstacles=Tuple[Segment],
-            temporary_obstacles=Tuple[Segment]
-        )
-        self.margin = sqrt((configuration.robot_length/2)**2 + (configuration.robot_width/2)**2)
+        self._state = State(nodes=[],
+                            permanent_obstacles=Tuple[Vector2, ...],
+                            temporary_obstacles=Tuple[Vector2, ...])
+        self.margin = sqrt((configuration.robot_length / 2)**2 +
+                           (configuration.robot_width / 2)**2)
         self.node_gap = 50
 
-    def init_permanent_obstacles(self, shape: Tuple[Segment]) -> None:
+    def init_permanent_obstacles(self, shape: Tuple[Vector2, ...]) -> None:
         """
         Initialize static graph form the main shape
         """
@@ -56,13 +55,16 @@ class DirtyPythfindingController(PathfindingController):
         self._state.nodes.clear()
 
         # Place nodes
-        for segment in shape:
+        for index in range(0, len(shape) - 1):
+            segment = Segment(shape[index], shape[index + 1])
             carrier_vec = segment.end - segment.start
             angle = carrier_vec.to_angle()
-            origin = Vector2(self.margin * cos(angle + pi/2), self.margin * sin(angle + pi/2))
+            origin = Vector2(self.margin * cos(angle + pi / 2),
+                             self.margin * sin(angle + pi / 2))
             radius = 0
             while radius < carrier_vec.euclidean_norm():
-                node_position = origin + Vector2(radius * cos(angle), radius * sin(angle))
+                node_position = origin + Vector2(radius * cos(angle),
+                                                 radius * sin(angle))
                 radius += self.node_gap
                 self._state.nodes.append(Node(node_position, []))
 
@@ -72,12 +74,14 @@ class DirtyPythfindingController(PathfindingController):
             for j in range(i + 1, len(self._state.nodes)):
                 s_node = self._state.nodes[j]
                 carrier = Segment(f_node.position, s_node.position)
-                for segment in shape:
+                for index in range(0, len(shape) - 1):
+                    segment = Segment(shape[index], shape[index + 1])
                     if not segment_segment_intersection(carrier, segment):
                         f_node.neighbors.append(s_node)
                         s_node.neighbors.append(f_node)
 
-    def update_temporary_obstacles(self, positions: Tuple[Vector2]) -> None:
+    def update_temporary_obstacles(self, positions: Tuple[Vector2,
+                                                          ...]) -> None:
         """
         Update temporary obstacles
         """

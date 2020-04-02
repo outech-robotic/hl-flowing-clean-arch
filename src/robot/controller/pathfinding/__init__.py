@@ -4,7 +4,6 @@ Pathfinding module
 from abc import ABC, abstractmethod
 from typing import Tuple, List
 
-from src.util.geometry.segment import Segment
 from src.util.geometry.vector import Vector2
 
 
@@ -12,11 +11,12 @@ class PathfindingController(ABC):
     """Pathfinding controller is an interface for computing path"""
 
     @abstractmethod
-    def init_permanent_obstacles(self, shape: Tuple[Segment]) -> None:
+    def init_permanent_obstacles(self, shape: Tuple[Vector2, ...]) -> None:
         """Initialize permanent obstacle from a shape"""
 
     @abstractmethod
-    def update_temporary_obstacles(self, positions: Tuple[Vector2]) -> None:
+    def update_temporary_obstacles(self, positions: Tuple[Vector2,
+                                                          ...]) -> None:
         """Update temporary obstacles"""
 
     @abstractmethod
