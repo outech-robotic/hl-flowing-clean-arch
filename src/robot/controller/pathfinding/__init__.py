@@ -20,9 +20,5 @@ class PathfindingController(ABC):
         """Update temporary obstacles"""
 
     @abstractmethod
-    def update_moving_obstacles(self, positions: Tuple[Vector2]) -> None:
-        """Update moving obstacles positions"""
-
-    @abstractmethod
     def find_path(self, start_pos: Vector2, aim_position: Vector2) -> List[Vector2]:
         """Compute a path between two positions"""
