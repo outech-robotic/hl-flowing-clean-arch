@@ -49,13 +49,9 @@ class DirtyPythfindingController(PathfindingController):
         nodes = List[Node]
         for x in range(-15, 15):
             for y in range(0, 20):
-                nodes.append(Node(
-                    position=Vector2(x*100, y*100)
-                ))
+                nodes.append(Node(position=Vector2(x * 100, y * 100)))
 
-        self._state = State(
-            nodes=nodes
-        )
+        self._state = State(nodes=nodes)
 
     def init_permanent_obstacles(self, shape: Tuple[Segment]) -> None:
         """
@@ -64,16 +60,14 @@ class DirtyPythfindingController(PathfindingController):
         self._state.permanent_obstacles = shape
         for i in range(len(self._state.nodes)):
             f_node = self._state.nodes[i]
-            for j in range(i+1, len(self._state.nodes)):
+            for j in range(i + 1, len(self._state.nodes)):
                 s_node = self._state.nodes[j]
                 carrier = Segment(f_node.position, s_node.position)
                 for segment in shape:
                     if not segment_segment_intersection(carrier, segment):
-                        vertice = Vertice(
-                            carrier=carrier,
-                            f_node=f_node,
-                            s_node=s_node
-                        )
+                        vertice = Vertice(carrier=carrier,
+                                          f_node=f_node,
+                                          s_node=s_node)
                         f_node.vertices.append(vertice)
                         s_node.vertices.append(vertice)
 
@@ -83,6 +77,7 @@ class DirtyPythfindingController(PathfindingController):
         """
         self._state.temporary_obstacles = positions
 
-    def find_path(self, start_pos: Vector2, aim_position: Vector2) -> List[Vector2]:
+    def find_path(self, start_pos: Vector2,
+                  aim_position: Vector2) -> List[Vector2]:
         """Compute a path between two positions"""
         # TODO : implement [djikstra/a*] algorithm
