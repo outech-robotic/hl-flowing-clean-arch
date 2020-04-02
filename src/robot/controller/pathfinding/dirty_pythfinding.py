@@ -3,10 +3,12 @@ Simple pathfinding implementation
 """
 from typing import Tuple, List
 from dataclasses import dataclass
+from math import pi, sqrt, cos, sin
 
 from src.util.geometry.segment import Segment
 from src.util.geometry.vector import Vector2
 from src.util.geometry.intersection import segment_segment_intersection
+from src.robot.entity.configuration import Configuration
 from src.robot.controller.pathfinding import PathfindingController
 
 
@@ -34,21 +36,37 @@ class DirtyPythfindingController(PathfindingController):
     Dirty implementation of a pathfinding using custom node and vertice implementation
     """
 
-    def __init__(self):
+    def __init__(self, configuration: Configuration):
         """
-        Initialize nodes
+        Initialize state
         """
-        nodes = []
-        for node_x in range(-15, 15):
-            for node_y in range(0, 20):
-                nodes.append(Node(position=Vector2(node_x * 100, node_y * 100)))
-        self._state = State(nodes=nodes)
+        self._state = State(
+            nodes=[],
+            permanent_obstacles=Tuple[Segment],
+            temporary_obstacles=Tuple[Segment]
+        )
+        self.margin = sqrt((configuration.robot_length/2)**2 + (configuration.robot_width/2)**2)
+        self.node_gap = 50
 
     def init_permanent_obstacles(self, shape: Tuple[Segment]) -> None:
         """
         Initialize static graph form the main shape
         """
         self._state.permanent_obstacles = shape
+        self._state.nodes.clear()
+
+        # Place nodes
+        for segment in shape:
+            carrier_vec = segment.end - segment.start
+            angle = carrier_vec.to_angle()
+            origin = Vector2(self.margin * cos(angle + pi/2), self.margin * sin(angle + pi/2))
+            radius = 0
+            while radius < carrier_vec.euclidean_norm():
+                node_position = origin + Vector2(radius * cos(angle), radius * sin(angle))
+                radius += self.node_gap
+                self._state.nodes.append(Node(node_position, []))
+
+        # Place vertices
         for i in range(len(self._state.nodes)):
             f_node = self._state.nodes[i]
             for j in range(i + 1, len(self._state.nodes)):
