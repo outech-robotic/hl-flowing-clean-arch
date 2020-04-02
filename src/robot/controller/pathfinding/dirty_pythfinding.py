@@ -16,17 +16,7 @@ class Node:
     Graph node
     """
     position: Vector2
-    vertices: List[Vertice]
-
-
-@dataclass
-class Vertice:
-    """
-    Graph vertice
-    """
-    carrier: Segment
-    f_node: Node
-    s_node: Node
+    neighbors: List
 
 
 @dataclass
@@ -35,22 +25,23 @@ class State:
     Contains the state of the pathfinding controller state
     """
     nodes: List[Node]
-    vertices: List[Vertice]
     permanent_obstacles: Tuple[Segment]
     temporary_obstacles: Tuple[Vector2]
 
 
 class DirtyPythfindingController(PathfindingController):
+    """
+    Dirty implementation of a pathfinding using custom node and vertice implementation
+    """
 
     def __init__(self):
         """
         Initialize nodes
         """
-        nodes = List[Node]
-        for x in range(-15, 15):
-            for y in range(0, 20):
-                nodes.append(Node(position=Vector2(x * 100, y * 100)))
-
+        nodes = []
+        for node_x in range(-15, 15):
+            for node_y in range(0, 20):
+                nodes.append(Node(position=Vector2(node_x * 100, node_y * 100)))
         self._state = State(nodes=nodes)
 
     def init_permanent_obstacles(self, shape: Tuple[Segment]) -> None:
@@ -65,11 +56,8 @@ class DirtyPythfindingController(PathfindingController):
                 carrier = Segment(f_node.position, s_node.position)
                 for segment in shape:
                     if not segment_segment_intersection(carrier, segment):
-                        vertice = Vertice(carrier=carrier,
-                                          f_node=f_node,
-                                          s_node=s_node)
-                        f_node.vertices.append(vertice)
-                        s_node.vertices.append(vertice)
+                        f_node.neighbors.append(s_node)
+                        s_node.neighbors.append(f_node)
 
     def update_temporary_obstacles(self, positions: Tuple[Vector2]) -> None:
         """
@@ -80,4 +68,3 @@ class DirtyPythfindingController(PathfindingController):
     def find_path(self, start_pos: Vector2,
                   aim_position: Vector2) -> List[Vector2]:
         """Compute a path between two positions"""
-        # TODO : implement [djikstra/a*] algorithm
