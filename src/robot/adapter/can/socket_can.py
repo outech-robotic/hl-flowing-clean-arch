@@ -5,6 +5,7 @@ import asyncio
 import binascii
 from asyncio import StreamWriter
 from typing import Callable, Awaitable, Optional
+
 from src.logger import LOGGER
 from src.robot.adapter.can import CANAdapter
 from src.robot.handler.protobuf import ProtobufHandler
@@ -45,6 +46,20 @@ class SocketCANAdapter(asyncio.Protocol, CANAdapter):
             raise RuntimeError("can_adapter_not_initialized")
         self.writer.write(data)
         await self.writer.drain()
+
+    def register_handler(self, arbitration_id: int,
+                         handler: Callable[[bytes], Awaitable[None]]) -> None:
+        pass
+
+
+class StubSocketCANAdapter(asyncio.Protocol, CANAdapter):
+
+    async def run(self) -> None:
+        while True:
+            await asyncio.sleep(100)
+
+    async def send(self, arbitration_id: int, data: bytes) -> None:
+        pass
 
     def register_handler(self, arbitration_id: int,
                          handler: Callable[[bytes], Awaitable[None]]) -> None:

@@ -11,7 +11,7 @@ from serial.tools import list_ports
 
 from src.robot.adapter.can import CANAdapter
 from src.robot.adapter.can.pycan import LoopbackCANAdapter, PyCANAdapter
-from src.robot.adapter.can.socket_can import SocketCANAdapter
+from src.robot.adapter.can.socket_can import SocketCANAdapter, StubSocketCANAdapter
 from src.robot.adapter.lidar import LIDARAdapter
 from src.robot.adapter.lidar.rplidar import RPLIDARAdapter
 from src.robot.adapter.lidar.simulated import SimulatedLIDARAdapter
@@ -121,7 +121,7 @@ def _provide_fake_simulator_dependencies(i: DependencyContainer) -> None:
     i.provide('can_adapter', LoopbackCANAdapter)
     i.provide('match_action_controller', MatchActionController)
     i.provide('protobuf_handler', ProtobufHandler)
-    i.provide('socket_can_adapter', SocketCANAdapter, card_id=1)
+    i.provide('socket_can_adapter', StubSocketCANAdapter)
 
     i.provide('lidar_adapter', SimulatedLIDARAdapter)
 
