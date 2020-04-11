@@ -53,6 +53,9 @@ class SocketCANAdapter(asyncio.Protocol, CANAdapter):
 
 
 class StubSocketCANAdapter(asyncio.Protocol, CANAdapter):
+    """
+    No-op CAN adapter.
+    """
 
     async def run(self) -> None:
         while True:
