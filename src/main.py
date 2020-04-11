@@ -144,12 +144,6 @@ async def _provide_real_life_dependencies(i: DependencyContainer) -> None:
     """
     i.provide('can_adapter', PyCANAdapter)
 
-    reader, writer = await _tcp_reader_writer('localhost', 1200)
-    i.provide('socket_can_adapter',
-              TCPSocketAdapter,
-              reader=reader,
-              writer=writer)
-
     i.provide(
         'can_bus',
         can.interface.Bus(channel='can0', bustype='socketcan', bitrate=1000000))
