@@ -4,25 +4,29 @@ Main module.
 import asyncio
 import math
 import os
+from asyncio import StreamWriter, StreamReader
+from typing import Tuple
 
 import can
 import rplidar
 from serial.tools import list_ports
 
-from src.robot.adapter.can import CANAdapter
+from src.logger import LOGGER
+from src.robot.adapter.can import SocketAdapter
 from src.robot.adapter.can.pycan import LoopbackCANAdapter, PyCANAdapter
-from src.robot.adapter.can.socket_can import SocketCANAdapter
 from src.robot.adapter.lidar import LIDARAdapter
 from src.robot.adapter.lidar.rplidar import RPLIDARAdapter
 from src.robot.adapter.lidar.simulated import SimulatedLIDARAdapter
+from src.robot.adapter.socket import CANAdapter
+from src.robot.adapter.socket.socket_adapter import TCPSocketAdapter
 from src.robot.controller.debug import DebugController
+from src.robot.controller.match_action import MatchActionController
 from src.robot.controller.motion.localization import LocalizationController
 from src.robot.controller.motion.motion import MotionController
 from src.robot.controller.motion.odometry import OdometryController
 from src.robot.controller.sensor.rplidar import LidarController
 from src.robot.controller.strategy import StrategyController
 from src.robot.controller.symmetry import SymmetryController
-from src.robot.controller.match_action import MatchActionController
 from src.robot.entity.color import Color
 from src.robot.entity.configuration import Configuration
 from src.robot.entity.configuration import DebugConfiguration
@@ -58,6 +62,15 @@ CONFIG = Configuration(
 )
 
 
+async def _tcp_reader_writer(host: str,
+                             port: int) -> Tuple[StreamReader, StreamWriter]:
+    while True:
+        try:
+            return await asyncio.open_connection(host, port)
+        except ConnectionRefusedError:
+            LOGGER.get().error("connection_refused", port=port, host=host)
+
+
 def _provide_robot_components(i: DependencyContainer) -> None:
     """
     Provide all the robot dependencies.
@@ -65,7 +78,9 @@ def _provide_robot_components(i: DependencyContainer) -> None:
     i.provide('configuration', CONFIG)
 
     i.provide('motion_handler', MotionHandler)
+    i.provide('protobuf_handler', ProtobufHandler)
 
+    i.provide('match_action_controller', MatchActionController)
     i.provide('odometry_controller', OdometryController)
     i.provide('localization_controller', LocalizationController)
     i.provide('motion_controller', MotionController)
@@ -119,21 +134,22 @@ def _provide_fake_simulator_dependencies(i: DependencyContainer) -> None:
     i.provide('web_browser_client', WebBrowserClient)
     i.provide('replay_saver', ReplaySaver)
     i.provide('can_adapter', LoopbackCANAdapter)
-    i.provide('match_action_controller', MatchActionController)
-    i.provide('protobuf_handler', ProtobufHandler)
-    i.provide('socket_can_adapter', SocketCANAdapter, card_id=1)
 
     i.provide('lidar_adapter', SimulatedLIDARAdapter)
 
 
-def _provide_real_life_dependencies(i: DependencyContainer) -> None:
+async def _provide_real_life_dependencies(i: DependencyContainer) -> None:
     """
     Provide the "real" dependencies to run the robot in real life.
     """
     i.provide('can_adapter', PyCANAdapter)
-    i.provide('match_action_controller', SocketCANAdapter)
-    i.provide('protobuf_handler', ProtobufHandler)
-    i.provide('socket_can_adapter', SocketCANAdapter)
+
+    reader, writer = await _tcp_reader_writer('localhost', 1200)
+    i.provide('socket_can_adapter',
+              TCPSocketAdapter,
+              reader=reader,
+              writer=writer)
+
     i.provide(
         'can_bus',
         can.interface.Bus(channel='can0', bustype='socketcan', bitrate=1000000))
@@ -143,16 +159,23 @@ def _provide_real_life_dependencies(i: DependencyContainer) -> None:
               rplidar.RPLidar(list_ports.comports()[0].device))
 
 
-def _get_container(simulate: bool) -> DependencyContainer:
+async def _get_container(simulate: bool) -> DependencyContainer:
     """
     Build the dependency container.
     """
     i = DependencyContainer()
+
+    reader, writer = await _tcp_reader_writer('localhost', 1200)
+    i.provide('socket_can_adapter',
+              TCPSocketAdapter,
+              reader=reader,
+              writer=writer)
+
     _provide_robot_components(i)
     if simulate:
         _provide_fake_simulator_dependencies(i)
     else:
-        _provide_real_life_dependencies(i)
+        await _provide_real_life_dependencies(i)
     return i
 
 
@@ -164,14 +187,14 @@ async def main() -> None:
     """
     is_simulation = os.environ.get('OUTECH_SIMULATION',
                                    'true').lower() == 'true'
-    i = _get_container(is_simulation)
+    i = await _get_container(is_simulation)
 
     lidar_adapter: LIDARAdapter = i.get('lidar_adapter')
     lidar_controller: LidarController = i.get('lidar_controller')
     lidar_adapter.register_handler(lidar_controller.set_detection)
 
     can_adapter: CANAdapter = i.get('can_adapter')
-    socket_can_adapter: SocketCANAdapter = i.get('socket_can_adapter')
+    socket_can_adapter: SocketAdapter = i.get('socket_can_adapter')
     motion_handler: MotionHandler = i.get('motion_handler')
 
     # Register the CAN bus to call the handlers.
