@@ -52,7 +52,7 @@ class SocketCANAdapter(asyncio.Protocol, CANAdapter):
         pass
 
 
-class StubSocketCANAdapter(asyncio.Protocol, CANAdapter):
+class StubSocketCANAdapter(CANAdapter):
     """
     No-op CAN adapter.
     """
