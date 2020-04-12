@@ -23,7 +23,7 @@ async def stub_tcp_server(data: bytes) -> AsyncGenerator:
         writer.write(data)
         await writer.drain()
 
-    server = await asyncio.start_server(on_connect, host='localhost', port=0)
+    server = await asyncio.start_server(on_connect, host='0.0.0.0', port=0)
     await server.start_serving()
 
     assert server.sockets
