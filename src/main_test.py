@@ -20,8 +20,9 @@ async def test_simulation_is_not_injected_when_not_simulating():
     """
     Make sure the simulation is not instantiated when running in non-simulation mode.
     """
-    i = await _get_container(False)
-    assert i.get('simulation_runner') is None
+    with pytest.raises(Exception):
+        i = await _get_container(False)
+        i.get('simulation_runner')
 
 
 @pytest.mark.asyncio

@@ -78,9 +78,7 @@ def _provide_robot_components(i: DependencyContainer) -> None:
     i.provide('configuration', CONFIG)
 
     i.provide('motion_handler', MotionHandler)
-    i.provide('protobuf_handler', ProtobufHandler)
 
-    i.provide('match_action_controller', MatchActionController)
     i.provide('odometry_controller', OdometryController)
     i.provide('localization_controller', LocalizationController)
     i.provide('motion_controller', MotionController)
@@ -152,18 +150,20 @@ async def _provide_real_life_dependencies(i: DependencyContainer) -> None:
     i.provide('rplidar_object',
               rplidar.RPLidar(list_ports.comports()[0].device))
 
+    reader, writer = await _tcp_reader_writer('localhost', 1200)
+    i.provide('socket_can_adapter',
+              TCPSocketAdapter,
+              reader=reader,
+              writer=writer)
+    i.provide('protobuf_handler', ProtobufHandler)
+    i.provide('match_action_controller', MatchActionController)
+
 
 async def _get_container(simulate: bool) -> DependencyContainer:
     """
     Build the dependency container.
     """
     i = DependencyContainer()
-
-    reader, writer = await _tcp_reader_writer('localhost', 1200)
-    i.provide('socket_can_adapter',
-              TCPSocketAdapter,
-              reader=reader,
-              writer=writer)
 
     _provide_robot_components(i)
     if simulate:
