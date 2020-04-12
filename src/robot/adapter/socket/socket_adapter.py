@@ -51,7 +51,7 @@ class TCPSocketAdapter(SocketAdapter):
         self.handlers.append(handler)
 
 
-class StubSocketCANAdapter(SocketAdapter):
+class StubSocketAdapter(SocketAdapter):
     """
     No-op adapter.
     """

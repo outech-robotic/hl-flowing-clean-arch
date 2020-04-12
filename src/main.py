@@ -18,7 +18,7 @@ from src.robot.adapter.lidar import LIDARAdapter
 from src.robot.adapter.lidar.rplidar import RPLIDARAdapter
 from src.robot.adapter.lidar.simulated import SimulatedLIDARAdapter
 from src.robot.adapter.socket import CANAdapter
-from src.robot.adapter.socket.socket_adapter import TCPSocketAdapter
+from src.robot.adapter.socket.socket_adapter import TCPSocketAdapter, StubSocketAdapter
 from src.robot.controller.debug import DebugController
 from src.robot.controller.match_action import MatchActionController
 from src.robot.controller.motion.localization import LocalizationController
@@ -134,6 +134,7 @@ def _provide_fake_simulator_dependencies(i: DependencyContainer) -> None:
     i.provide('can_adapter', LoopbackCANAdapter)
 
     i.provide('lidar_adapter', SimulatedLIDARAdapter)
+    i.provide('socket_can_adapter', StubSocketAdapter)
 
 
 async def _provide_real_life_dependencies(i: DependencyContainer) -> None:
