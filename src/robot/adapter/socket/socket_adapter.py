@@ -36,7 +36,7 @@ class TCPSocketAdapter(SocketAdapter):
             msg_str = msg.decode()
             raw_payload = binascii.unhexlify(msg_str)
 
-            LOGGER.get().debug('socket_can_adapter_received',
+            LOGGER.get().debug('socket_adapter_received',
                                raw_payload=raw_payload)
 
             for handler in self.handlers:

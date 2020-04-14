@@ -123,7 +123,7 @@ def _provide_fake_simulator_dependencies(i: DependencyContainer) -> None:
     i.provide('can_adapter', LoopbackCANAdapter)
 
     i.provide('lidar_adapter', SimulatedLIDARAdapter)
-    i.provide('socket_can_adapter', StubSocketAdapter)
+    i.provide('socket_adapter', StubSocketAdapter)
 
 
 async def _provide_real_life_dependencies(i: DependencyContainer) -> None:
@@ -141,10 +141,7 @@ async def _provide_real_life_dependencies(i: DependencyContainer) -> None:
               rplidar.RPLidar(list_ports.comports()[0].device))
 
     reader, writer = await get_reader_writer('localhost', 1200)
-    i.provide('socket_can_adapter',
-              TCPSocketAdapter,
-              reader=reader,
-              writer=writer)
+    i.provide('socket_adapter', TCPSocketAdapter, reader=reader, writer=writer)
     i.provide('protobuf_handler', ProtobufHandler)
     i.provide('match_action_controller', MatchActionController)
 
@@ -178,7 +175,7 @@ async def main() -> None:
     lidar_adapter.register_handler(lidar_controller.set_detection)
 
     can_adapter: CANAdapter = i.get('can_adapter')
-    socket_can_adapter: SocketAdapter = i.get('socket_can_adapter')
+    socket_adapter: SocketAdapter = i.get('socket_adapter')
     motion_handler: MotionHandler = i.get('motion_handler')
 
     # Register the CAN bus to call the handlers.
@@ -198,7 +195,7 @@ async def main() -> None:
         strategy_controller.run(),
         can_adapter.run(),
         debug_controller.run(),
-        socket_can_adapter.run(),
+        socket_adapter.run(),
     }
 
     if is_simulation:
