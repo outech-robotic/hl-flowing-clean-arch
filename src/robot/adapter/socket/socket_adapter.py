@@ -32,7 +32,7 @@ class TCPSocketAdapter(SocketAdapter):
     async def _run(self) -> None:
         while True:
             msg = await self.reader.readuntil(b'>')
-            msg = msg.strip(b'\n<>')
+            msg = msg.strip(b'\n').strip(b'<>')
             msg_str = msg.decode()
             raw_payload = binascii.unhexlify(msg_str)
 

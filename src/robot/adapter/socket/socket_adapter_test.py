@@ -90,5 +90,53 @@ async def test_socket_can(data, expected):
 
         writer.close()
 
-        mock_handler1.assert_has_calls(map(call, expected))
-        mock_handler2.assert_has_calls(map(call, expected))
+    mock_handler1.assert_has_calls(map(call, expected))
+    mock_handler2.assert_has_calls(map(call, expected))
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    'data',
+    [
+        # Packet that is not in hexadecimal form.
+        b'<This is definitely not hexa>\n',
+
+        # Packet is too short.
+        b'<0>\n',
+
+        # Odd number of characters.
+        b'<123>\n',
+
+        # Unterminated packet.
+        b'<12<12>\n',
+
+        # Message split by a newline.
+        b'<\n>\n',
+    ])
+async def test_invalid_packet_socket_can(data):
+    """
+    Make sure that SocketAdapter will never call the handlers if the packets are malformed.
+    """
+    future = asyncio.Future()
+    future.set_result(None)
+    mock_handler1 = MagicMock(return_value=future)
+
+    future = asyncio.Future()
+    future.set_result(None)
+    mock_handler2 = MagicMock(return_value=future)
+
+    async with stub_tcp_server(data) as (host, port):
+        reader, writer = await asyncio.open_connection(host=host, port=port)
+
+        adapter = TCPSocketAdapter(reader, writer)
+        adapter.register_handler(mock_handler1)
+        adapter.register_handler(mock_handler2)
+
+        run_task = asyncio.create_task(adapter.run())
+        await asyncio.sleep(0.1)
+        run_task.cancel()
+
+        writer.close()
+
+    mock_handler1.assert_not_called()
+    mock_handler2.assert_not_called()
