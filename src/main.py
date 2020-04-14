@@ -4,14 +4,11 @@ Main module.
 import asyncio
 import math
 import os
-from asyncio import StreamWriter, StreamReader
-from typing import Tuple
 
 import can
 import rplidar
 from serial.tools import list_ports
 
-from src.logger import LOGGER
 from src.robot.adapter.can import SocketAdapter
 from src.robot.adapter.can.pycan import LoopbackCANAdapter, PyCANAdapter
 from src.robot.adapter.lidar import LIDARAdapter
@@ -47,6 +44,7 @@ from src.util import can_id
 from src.util.dependency_container import DependencyContainer
 from src.util.geometry.segment import Segment
 from src.util.geometry.vector import Vector2
+from src.util.tcp import get_reader_writer
 
 CONFIG = Configuration(
     initial_position=Vector2(200, 1200),
@@ -60,15 +58,6 @@ CONFIG = Configuration(
     distance_between_wheels=357,
     debug=DebugConfiguration(),
 )
-
-
-async def _tcp_reader_writer(host: str,
-                             port: int) -> Tuple[StreamReader, StreamWriter]:
-    while True:
-        try:
-            return await asyncio.open_connection(host, port)
-        except ConnectionRefusedError:
-            LOGGER.get().error("connection_refused", port=port, host=host)
 
 
 def _provide_robot_components(i: DependencyContainer) -> None:
@@ -151,7 +140,7 @@ async def _provide_real_life_dependencies(i: DependencyContainer) -> None:
     i.provide('rplidar_object',
               rplidar.RPLidar(list_ports.comports()[0].device))
 
-    reader, writer = await _tcp_reader_writer('localhost', 1200)
+    reader, writer = await get_reader_writer('localhost', 1200)
     i.provide('socket_can_adapter',
               TCPSocketAdapter,
               reader=reader,
